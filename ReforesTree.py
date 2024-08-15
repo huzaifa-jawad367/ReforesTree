@@ -34,4 +34,19 @@ save_dir = "data/tiles"
 # Extracting the main information for each site 
 ortho_data = create_ortho_data(directory, os.path.join(save_dir, 'ortho_data.csv'))
 
-print(ortho_data.head())
+# print(ortho_data.head())
+print(ortho_data.info())
+# print(ortho_data.describe())
+
+# Split images into tiles (might takes some minutes)
+for file in os.listdir(directory):
+    if file.endswith('.tif'):
+        # Open image file for reading (binary mode)
+        path_to_raster = os.path.join(directory, file)
+        name = file.replace('.tif', '')
+
+        tiles_dir = os.path.join(save_dir, name)
+        if not os.path.exists(tiles_dir):
+            os.makedirs(tiles_dir)        
+            split_raster(path_to_raster, base_dir=tiles_dir, patch_size=4000, patch_overlap=0.05)
+            

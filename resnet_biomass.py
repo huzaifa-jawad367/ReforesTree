@@ -59,7 +59,7 @@ class FeatureMLP(nn.Module):
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
         return x
-    
+    """""
 # Define the modified model that combines the ResNet50 backbone and additional features
 class ModifiedDeepForestAGB_CC_Resnet(nn.Module):
     def __init__(self, mlp_hidden_dim=256, feature_dim=12, feature_hidden_dim=128, freeze_backbone=True):
@@ -101,6 +101,57 @@ class ModifiedDeepForestAGB_CC_Resnet(nn.Module):
         agb_output, cc_output = agb_cc_outputs[:, 0], agb_cc_outputs[:, 1]
 
         return agb_output, cc_output
+        """
+class ModifiedDeepForestAGB_CC_Resnet(nn.Module):
+    def __init__(self, mlp_hidden_dim=256, feature_dim=12, feature_hidden_dim=128, freeze_backbone=True):
+        super(ModifiedDeepForestAGB_CC_Resnet, self).__init__()
+        
+        # Load a pretrained ResNet18 and remove its final fully-connected layer
+        self.backbone = models.resnet18(pretrained=True)
+        self.backbone.fc = nn.Identity()  # We will use the output of the avgpooled features
+        
+        # In ResNet18 the final convolutional layer outputs 512-dim features after avgpool
+        backbone_features = 512
+        
+        # MLP for processing the additional (non-image) features
+        self.feature_mlp = FeatureMLP(input_dim=feature_dim, hidden_dim=feature_hidden_dim)
+        
+        # Total features after concatenating image and additional features
+        total_features = backbone_features + feature_hidden_dim
+        
+        # Regression head producing two outputs (AGB and Carbon Content)
+        self.mlp_head = MLPRegressionHead_Resnet(in_features=total_features, hidden_dim=mlp_hidden_dim)
+        
+        # Fine-tuning strategy: freeze early layers of the backbone.
+        # Here we freeze all parameters except those in layer3 and layer4.
+        if freeze_backbone:
+            for name, param in self.backbone.named_parameters():
+                # If the parameter belongs to layer3 or layer4, we allow training; otherwise, freeze it.
+                if "layer3" in name or "layer4" in name:
+                    param.requires_grad = True
+                else:
+                    param.requires_grad = False
+
+    def forward(self, x, additional_features):
+        # Extract image features using the backbone. 
+        # With fc replaced by Identity, the forward() method will:
+        #   - Process the image through conv layers, pooling, etc.
+        #   - Apply the adaptive avgpool and flatten the result.
+        backbone_features = self.backbone(x)
+        
+        # Process additional features through the MLP
+        processed_features = self.feature_mlp(additional_features)
+        
+        # Concatenate the image features and the additional features
+        combined_features = torch.cat([backbone_features, processed_features], dim=1)
+        
+        # Pass through the regression head
+        outputs = self.mlp_head(combined_features)
+        
+        # Split the two outputs: first for AGB and second for Carbon Content
+        agb_output, cc_output = outputs[:, 0], outputs[:, 1]
+        return agb_output, cc_output
+
 
     
 class TreeDataset(Dataset):

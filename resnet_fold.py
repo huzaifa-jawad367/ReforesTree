@@ -239,7 +239,7 @@ def test_model(model, test_loader, criterion, device):
 # Define a function to run one fold training/testing
 ###############################################
 
-def run_fold(fold, train_csv, val_csv, test_csv, num_epochs=3):
+def run_fold(fold, train_csv, val_csv, test_csv, img_root, model_save_dir, num_epochs=3):
     print(f"\n===== Running Fold {fold} =====")
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     
@@ -253,7 +253,6 @@ def run_fold(fold, train_csv, val_csv, test_csv, num_epochs=3):
 
     # Update img_root to the correct path for Kaggle
     #---------------update-
-    img_root = '/kaggle/input/reforest-dataset/tiles'
     
     train_dataset = TreeDataset(csv_file=train_csv, img_root=img_root, transform=transform)
     val_dataset = TreeDataset(csv_file=val_csv, img_root=img_root, transform=transform)
@@ -269,7 +268,7 @@ def run_fold(fold, train_csv, val_csv, test_csv, num_epochs=3):
     optimizer = optim.Adam(model.parameters(), lr=0.001)
     
     # TensorBoard writer for this fold
-    writer = SummaryWriter(f"runs/deepforest_agb_cc_fold_{fold}")
+    writer = SummaryWriter(f"{model_save_dir}/runs/deepforest_agb_cc_fold_{fold}")
     
     best_val_loss = float('inf')
     
@@ -285,7 +284,7 @@ def run_fold(fold, train_csv, val_csv, test_csv, num_epochs=3):
         # Save best model based on validation loss
         if val_loss < best_val_loss:
             best_val_loss = val_loss
-            model_save_path = f"/kaggle/working/deepforest_agb_cc_best_fold_{fold}.pth"
+            model_save_path = f"./{model_save_dir}/deepforest_agb_cc_best_fold_{fold}.pth"
             torch.save(model.state_dict(), model_save_path)
             print("Best model saved:", model_save_path)
     
@@ -303,31 +302,36 @@ if __name__ == '__main__':
     # Define a dictionary for the folds with absolute CSV paths
     folds = {
         1: {
-            "train": "E:\tukl_research\ReforesTree\data\split1\banana_splits_train_1.csv",
-            "val":   "E:\tukl_research\ReforesTree\data\split1\banana_splits_val_1.csv",
-            "test":  "E:\tukl_research\ReforesTree\data\split1\banana_splits_val_1.csv"
+            "train": "./ReforesTree/data/split1/banana_splits_train_1.csv",
+            "val":   "./ReforesTree/data/split1/banana_splits_val_1.csv",
+            "test":  "./ReforesTree/data/split1/banana_splits_val_1.csv"
         },
         2: {
-            "train": "E:\tukl_research\ReforesTree\data\split2\banana_splits_train_2.csv",
-            "val":   "E:\tukl_research\ReforesTree\data\split2\banana_splits_val_2.csv",
-            "test":  "E:\tukl_research\ReforesTree\data\split2\banana_splits_test_2.csv"
+            "train": "./ReforesTree/data/split2/banana_splits_train_2.csv",
+            "val":   "./ReforesTree/data/split2/banana_splits_val_2.csv",
+            "test":  "./ReforesTree/data/split2/banana_splits_test_2.csv"
         },
         3: {
-            "train": "E:\tukl_research\ReforesTree\data\split3\banana_splits_train_3.csv",
-            "val":   "E:\tukl_research\ReforesTree\data\split3\banana_splits_val_3.csv",
-            "test":  "E:\tukl_research\ReforesTree\data\split3\banana_splits_test_3.csv"
+            "train": "./ReforesTree/data/split3/banana_splits_train_3.csv",
+            "val":   "./ReforesTree/data/split3/banana_splits_val_3.csv",
+            "test":  "./ReforesTree/data/split3/banana_splits_test_3.csv"
         },
         4: {
-            "train": "E:\tukl_research\ReforesTree\data\split4\banana_splits_train_4.csv",
-            "val":   "E:\tukl_research\ReforesTree\data\split4\banana_splits_val_4.csv",
-            "test":  "E:\tukl_research\ReforesTree\data\split4\banana_splits_test_4.csv"
+            "train": "./ReforesTree/data/split4/banana_splits_train_4.csv",
+            "val":   "./ReforesTree/data/split4/banana_splits_val_4.csv",
+            "test":  "./ReforesTree/data/split4/banana_splits_test_4.csv"
         },
         5: {
-            "train": "E:\tukl_research\ReforesTree\data\split5\banana_splits_train_5.csv",
-            "val":   "E:\tukl_research\ReforesTree\data\split5\banana_splits_val_5.csv",
-            "test":  "E:\tukl_research\ReforesTree\data\split5\banana_splits_test_5.csv"
+            "train": "./ReforesTree/data/split5/banana_splits_train_5.csv",
+            "val":   "./ReforesTree/data/split5/banana_splits_val_5.csv",
+            "test":  "./ReforesTree/data/split5/banana_splits_test_5.csv"
         }
     }
+
+    # img_root = '/kaggle/input/reforest-dataset/tiles'
+    img_root = 'dataset/tiles'
+
+    model_save_dir = "Model_saves/Resnet18"
 
     # Loop through each fold and run training/testing
     for fold_num, paths in folds.items():
@@ -336,5 +340,7 @@ if __name__ == '__main__':
             train_csv=paths["train"],
             val_csv=paths["val"],
             test_csv=paths["test"],
-            num_epochs=3  # Run for 3 epochs per fold
+            img_root=img_root,
+            model_save_dir=model_save_dir,
+            num_epochs=30  # Run for 3 epochs per fold
         )

@@ -40,8 +40,6 @@ You can download the raw data [from dropbox](https://www.dropbox.com/scl/fo/qzlq
 
 Alternatively, we are hosting a version of the dataset in [zenodo](https://zenodo.org/record/6813783).
 
-## Tutorial
-In the tutorial you'll find the steps to recreate (and hopefully improve) the dataset and how to use it. 
+### Training the Model
 
-Please read our paper [here](https://arxiv.org/abs/2201.11192).
-For any questions, please reach out to gyri.reiersen@tum.de or david.dao@inf.eth.ch
+

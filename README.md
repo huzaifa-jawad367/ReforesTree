@@ -42,4 +42,24 @@ Alternatively, we are hosting a version of the dataset in [zenodo](https://zenod
 
 ### Training the Model
 
+Train Model with Resnet-18 back bone for 5 folds:
+```
+python resnet_fold.py
+```
+
+Train Model with Resnet-18 back bone :
+```
+python resnet_biomass.py
+```
+
+Train Model with Resnet-18 back bone :
+```
+python load_model.py
+```
+
+
+
+
+
+
 
